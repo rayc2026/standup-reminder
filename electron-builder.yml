@@ -1,0 +1,35 @@
+appId: io.github.rayc2026.standupreminder
+productName: 起身提醒
+asar: true
+directories:
+  output: release
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+extraResources:
+  - from: LICENSE
+    to: LICENSE.txt
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  artifactName: "起身提醒-${version}-${arch}.${ext}"
+nsis:
+  artifactName: "起身提醒-Setup-${version}-${arch}.${ext}"
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: 起身提醒
+  deleteAppDataOnUninstall: false
+portable:
+  artifactName: "起身提醒-Portable-${version}-${arch}.${ext}"

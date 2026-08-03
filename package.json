@@ -1,0 +1,35 @@
+{
+  "name": "standup-reminder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows tray reminder for regular movement breaks with optional Codex integration.",
+  "author": "rayc2026",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "pnpm build && electron .",
+    "build": "pnpm build:main && pnpm build:renderer",
+    "build:main": "tsup",
+    "build:renderer": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dist": "pnpm build && electron-builder --win nsis portable --x64 --publish never",
+    "dist:dir": "pnpm build && electron-builder --dir --win --x64"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "electron": "43.2.0",
+    "electron-builder": "26.15.3",
+    "tsup": "8.5.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
+  }
+}

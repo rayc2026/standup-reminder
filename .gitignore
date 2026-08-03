@@ -1,0 +1,10 @@
+node_modules/
+.pnpm-store/
+dist/
+dist-electron/
+release/
+coverage/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

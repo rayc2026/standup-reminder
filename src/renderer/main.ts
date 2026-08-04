@@ -84,9 +84,9 @@ function dashboard(state: PublicState): string {
               ${option("persistent_popup", "持续弹窗", state.settings.reminderMode)}
             </select></label>
             <div class="toggle-list">
-              ${toggle("sound", "提示音", "系统通知出现时播放声音", state.settings.sound)}
+              ${toggle("sound", "提示音", "提醒触发时播放系统提示音", state.settings.sound)}
               ${toggle("launchAtLogin", "开机自动启动", state.portable ? "便携版不提供此功能" : "登录 Windows 后在托盘静默启动", state.settings.launchAtLogin, state.portable)}
-              ${toggle("suppressPopupFullscreen", "全屏时减少打扰", "前台应用全屏时仅保留系统通知", state.settings.suppressPopupFullscreen)}
+              ${toggle("suppressPopupFullscreen", "全屏时减少打扰", state.portable ? "便携版为保证提醒可见，始终保留轻量弹窗" : "前台应用全屏时仅保留系统通知", state.settings.suppressPopupFullscreen, state.portable)}
             </div>
           </form>
         </section>

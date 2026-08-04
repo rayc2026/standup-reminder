@@ -7,6 +7,7 @@ import {
   Notification,
   powerMonitor,
   screen,
+  shell,
   Tray,
 } from "electron";
 import { join } from "node:path";
@@ -26,6 +27,7 @@ import { LocalStore } from "./store";
 import { startBridgeServer } from "./bridge";
 import { codexModeAllows } from "./codex-mode";
 import { isForegroundWindowFullscreen } from "./fullscreen";
+import { getPopupPresentation } from "./notification-policy";
 import { formatStateForCodex, runMcpServer } from "../mcp/server";
 
 const APP_ID = "io.github.rayc2026.standupreminder";
@@ -151,40 +153,67 @@ function startDesktopApp(): void {
     if (effects.length > 0) persist();
   }
 
-  function showReminder(attempt: number): void {
-    const notification = new Notification({
-      id: "standup-reminder-due",
-      groupId: "standup-reminder",
-      title: "该起身活动了",
-      body: `已经连续使用电脑 ${Math.floor(engine.getSnapshot().workElapsedSeconds / 60)} 分钟，起来走动 ${settings.breakMinutes} 分钟吧。`,
-      silent: !settings.sound,
-      actions: [
-        { type: "button", text: "开始活动" },
-        { type: "button", text: `延后 ${settings.retryMinutes} 分钟` },
-      ],
-    });
-    notification.on("action", (_event, actionIndex) => {
-      if (actionIndex === 0) perform({ type: "start_break" });
-      if (actionIndex === 1) perform({ type: "snooze" });
-    });
-    notification.on("click", () => showWindow("popup", true));
-    notification.show();
+  function showReminder(_attempt: number): void {
+    playReminderSound();
 
-    const shouldShowPopup =
-      settings.reminderMode === "persistent_popup" ||
-      (settings.reminderMode === "gentle_popup" && attempt > 1);
-    if (shouldShowPopup) void showPopupUnlessSuppressed();
+    const popup = getPopupPresentation(settings.reminderMode, portable);
+    if (popup.show) {
+      void showPopupUnlessSuppressed(popup.focus, popup.allowFullscreenSuppression);
+    }
+
+    const showNativeFailureFallback = () => {
+      void showPopupUnlessSuppressed(false, false);
+    };
+
+    if (Notification.isSupported()) {
+      try {
+        const notification = new Notification({
+          id: "standup-reminder-due",
+          groupId: "standup-reminder",
+          title: "该起身活动了",
+          body: `已经连续使用电脑 ${Math.floor(engine.getSnapshot().workElapsedSeconds / 60)} 分钟，起来走动 ${settings.breakMinutes} 分钟吧。`,
+          // Sound is played independently so portable builds do not depend on
+          // Windows accepting the native toast before the user hears anything.
+          silent: true,
+          actions: [
+            { type: "button", text: "开始活动" },
+            { type: "button", text: `延后 ${settings.retryMinutes} 分钟` },
+          ],
+        });
+        notification.on("action", (_event, actionIndex) => {
+          if (actionIndex === 0) perform({ type: "start_break" });
+          if (actionIndex === 1) perform({ type: "snooze" });
+        });
+        notification.on("click", () => showWindow("popup", true));
+        notification.on("failed", showNativeFailureFallback);
+        notification.show();
+      } catch {
+        showNativeFailureFallback();
+      }
+    }
   }
 
-  async function showPopupUnlessSuppressed(): Promise<void> {
-    if (await shouldSuppressPopup()) return;
+  async function showPopupUnlessSuppressed(
+    focus: boolean,
+    allowFullscreenSuppression: boolean,
+  ): Promise<void> {
+    if (allowFullscreenSuppression && (await shouldSuppressPopup())) return;
     if (engine.getSnapshot().status !== "break_due") return;
-    showWindow("popup", settings.reminderMode === "persistent_popup");
+    showWindow("popup", focus);
   }
 
   function showSimpleNotification(title: string, body: string): void {
+    playReminderSound();
     if (!Notification.isSupported()) return;
-    new Notification({ title, body, silent: !settings.sound }).show();
+    try {
+      new Notification({ title, body, silent: true }).show();
+    } catch {
+      // The independent sound already delivered the non-visual completion cue.
+    }
+  }
+
+  function playReminderSound(): void {
+    if (settings.sound) shell.beep();
   }
 
   async function shouldSuppressPopup(): Promise<boolean> {
@@ -315,6 +344,16 @@ function startDesktopApp(): void {
   }
 
   function createTrayImage(status: TimerStatus) {
+    const iconPath = app.isPackaged
+      ? join(process.resourcesPath, "tray-icon.png")
+      : join(app.getAppPath(), "build", "icon.png");
+    const pngIcon = nativeImage.createFromPath(iconPath);
+    if (!pngIcon.isEmpty()) {
+      return pngIcon.resize({ width: 16, height: 16, quality: "best" });
+    }
+
+    // Keep a generated fallback so a missing resource never prevents the
+    // tray application from starting. Windows builds normally use the PNG.
     const color =
       status === "break_due"
         ? "#ef4444"

@@ -8,6 +8,8 @@ files:
   - dist-electron/**/*
   - package.json
 extraResources:
+  - from: build/icon.png
+    to: tray-icon.png
   - from: LICENSE
     to: LICENSE.txt
   - from: THIRD_PARTY_NOTICES.md

@@ -7,7 +7,6 @@
 | 组件 | 版本 | 许可证 | 上游项目 |
 | --- | --- | --- | --- |
 | Electron | 43.2.0 | MIT；同时包含 Chromium 等第三方许可 | https://github.com/electron/electron |
-| @modelcontextprotocol/node | 2.0.0 | MIT / Apache-2.0 许可过渡，详见包内 LICENSE | https://github.com/modelcontextprotocol/typescript-sdk |
 | @modelcontextprotocol/server | 2.0.0 | MIT / Apache-2.0 许可过渡，详见包内 LICENSE | https://github.com/modelcontextprotocol/typescript-sdk |
 | Zod | 4.4.3 | MIT | https://github.com/colinhacks/zod |
 

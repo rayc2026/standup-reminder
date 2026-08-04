@@ -1,7 +1,7 @@
 allowBuilds:
+  electron: true
   electron-winstaller: true
   esbuild: true
-onlyBuiltDependencies:
-  - electron
-  - electron-winstaller
-  - esbuild
+overrides:
+  # First release that fixes GHSA-g7r4-m6w7-qqqr.
+  esbuild: 0.28.1
